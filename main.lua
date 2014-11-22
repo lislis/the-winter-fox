@@ -14,9 +14,9 @@ function love.load()
 	stage.stageH = love.graphics.getHeight()
 	stage.lanesWidth =  stage.stageW / (stage.lanesCount + 2)
 	stage.bg = {}
-	stage.bg.level1 =  love.graphics.newImage("assets/level1.png")
-	stage.bg.level2 =  love.graphics.newImage("assets/level2.png")
-	stage.bg.level3 =  love.graphics.newImage("assets/level3.png")
+	stage.bg.level1 =  love.graphics.newImage("assets/bg.jpg")
+	stage.bg.level2 =  love.graphics.newImage("assets/bg.jpg")
+	stage.bg.level3 =  love.graphics.newImage("assets/bg.jpg")
 	stage.currentY = 0
 	stage.next = {}
 	stage.next.bg = stage.bg.level1
@@ -24,61 +24,70 @@ function love.load()
 
 	things = {}
 	things.attributes = {'collect', 'evade', 'jump'}
+	things.sprite = love.graphics.newImage('assets/sprite.png')
 	things.img = {}
-	things.img.collect = love.graphics.newImage('assets/thing.jpg')
-	things.img.evade = love.graphics.newImage('assets/thing.jpg')
-	things.img.jump = love.graphics.newImage('assets/thing.jpg')
+	things.img.collect = love.graphics.newImage('assets/apple.png')
+	things.img.evade = love.graphics.newImage('assets/bomb.png')
+	things.img.jump = love.graphics.newImage('assets/shit.png')
 	things.count = 5
 	things.allthe = {}
+	things.height = 60
 
 	for i = 1, things.count do 
 
 		things.allthe[i] = {}
-		things.allthe[i].lane = math.random(stage.lanesCount)
-		things.allthe[i].attr = things.attributes[math.random(3)] -- only works because we have as many attributes as lanes
-		things.allthe[i].w = 50 --magic
-		things.allthe[i].h = 50 --magic
-		things.allthe[i].y = - things.allthe[i].h
+		things.allthe[i].lane = math.random(1, 4)
+		things.allthe[i].attr = things.attributes[math.random(1, 3)] -- only works because we have as many attributes as lanes
+		things.allthe[i].w = 55 --magic
+		things.allthe[i].h = things.height
+		things.allthe[i].y = - things.height
 		things.allthe[i].img = things.img[things.allthe[i].attr]
 		things.allthe[i].onstage = false
-
-		if i == 1 then
-			things.allthe[i].onstage = true
-		end
 
 	end
 
 	fox = {}
 	fox.lane = 2 -- magic
 	fox.stats = {}
-	fox.stats.w = 50 --stage.lanesWidth
-	fox.stats.h = stage.stageH - 100
-	fox.stats.x = stage.lanesWidth * fox.lane + fox.stats.w-- stage.stageW / 2 - (fox.stats.w / 2)
-	fox.stats.y = fox.stats.h
+	fox.stats.w = 35 --stage.lanesWidth
+	fox.stats.h = 136
+	fox.stats.x = stage.lanesWidth * fox.lane * 1.15
+	fox.stats.y = stage.stageH - 140
 	fox.states = {'walking', 'changing', 'jumping'}
 	fox.state = 'walking'
-	fox.img = love.graphics.newImage('assets/fox.jpg')
+	fox.img = love.graphics.newImage('assets/fox.png')
 
 	game = {}
 	game.level = 1
 	game.score = 0
-	game.speed = 0.5
+	game.speed = 6
 	game.time = 0
-	game.spawntime = 3
+	game.spawntime = 1.5
 
+	sound = {}
+	sound.collect = love.audio.newSource('sounds/collect.wav')
+	sound.jump = love.audio.newSource('sounds/jump.wav')
+	sound.dead = love.audio.newSource('sounds/dead.wav')
+	sound.gameover = love.audio.newSource('sounds/game_over.wav')
+	sound.start = love.audio.newSource('sounds/start.wav')
+	sound.bg = love.audio.newSource('sounds/bg-sounds.wav')
 
+	love.audio.play(sound.start)
+	love.audio.play(sound.bg)
 end
 
 function love.update(dt)
 
-	updateBackground()
-	updateThings()
-	updateFox(dt)
+	if currentState == 'play' then
+		updateBackground()
+		updateThings()
+		updateFox(dt)
 
-	timer = timer + dt
-	if timer >= game.spawntime then
-		spawnThings()
-		timer = 0
+		timer = timer + dt
+		if timer >= game.spawntime then
+			spawnThings()
+			timer = 0
+		end
 	end
 
 end
@@ -89,6 +98,16 @@ function love.draw()
 		drawBackground()
 		drawThings()
 		drawFox()
+		
+		love.graphics.rectangle('fill',  stage.stageW - 120, 20, 100, 35)
+		love.graphics.setColor(50, 50, 50)
+		love.graphics.print( 'Score: '.. game.score, stage.stageW - 100, 30)
+
+		love.graphics.setColor(255, 255, 255)
+	elseif currentState == 'lose' then
+
+		drawLost()
+
 	end
 
 end
@@ -96,7 +115,6 @@ end
 -- -------------------------------------------------------
 
 function collisionDetection(thingY, thingH)
-	
 	if fox.stats.y - (thingY + thingH) >= 0 then
 		return false
 	else
@@ -113,14 +131,18 @@ function foxCollide()
 			if things.allthe[i].lane == fox.lane then
 
 				isColliding = collisionDetection(things.allthe[i].y, things.allthe[i].h)
-
 				if isColliding then
-					-- what is the attribute
-					print('collide')
-					if  then
+					if things.allthe[i].attr == 'collect' then
+						game.score = game.score + 1
+						love.audio.play(sound.collect)
+						things.allthe[i].onstage = false
+					elseif things.allthe[i].attr ~= 'jump' and fox.state ~= 'jumping' then
+						love.audio.play(sound.dead)
+						things.allthe[i].onstage = false
+						currentState = 'lose'
 					end
+					
 				end
-
 			end
 		end
 	end
@@ -139,6 +161,7 @@ end
 
 function foxJump()
 	fox.state = 'jumping'
+	love.audio.play(sound.jump)
 end
 
 function foxLeft()
@@ -163,7 +186,7 @@ end
 
 function updateFox(dt)
 
-	fox.stats.x = stage.lanesWidth * fox.lane + fox.stats.w
+	fox.stats.x = stage.lanesWidth * fox.lane * 1.15
 
 	if fox.state ~= 'walking' then
 		foxTimer = foxTimer + dt
@@ -193,13 +216,12 @@ function spawnThings()
 	for i = 1, things.count do
 
 		if things.allthe[i].onstage	== false then
-			if math.random(1, 10) > 3 then
+			if math.random(1, 10) > 5 then
+				things.allthe[i].y = - things.height
 				things.allthe[i].lane = math.random(stage.lanesCount)
 				things.allthe[i].attr = things.attributes[math.random(3)] -- 3 attributes
 				things.allthe[i].img = things.img[things.allthe[i].attr]
 				things.allthe[i].onstage = true
-
-				print(things.allthe[i].attr)
 			end
 		end
 	end
@@ -209,7 +231,7 @@ function drawThings()
 	for i = 1, things.count do
 
 		if things.allthe[i].onstage	== true then
-			love.graphics.draw(things.allthe[i].img, (stage.lanesWidth * things.allthe[i].lane) + (things.allthe[i].w / 2), things.allthe[i].y)
+			love.graphics.draw(things.allthe[i].img, (stage.lanesWidth * things.allthe[i].lane) * 1.15, things.allthe[i].y)
 		end
 	end
 end
@@ -243,8 +265,16 @@ end
 function drawBackground()
 	love.graphics.draw(stage.bg['level' .. game.level], 0, stage.currentY)
 	love.graphics.draw(stage.next.bg, 0, stage.next.y)
-	love.graphics.setColor(50,50,50)
-	for i=0, stage.lanesCount do
-		love.graphics.line(stage.lanesWidth + (i * stage.lanesWidth),0, stage.lanesWidth + (i * stage.lanesWidth), stage.stageH)
-	end
+	
+	--for i=0, stage.lanesCount do
+		--love.graphics.line(stage.lanesWidth + ((i * 1.3) * stage.lanesWidth),0, stage.lanesWidth + ((i * 1.3) * stage.lanesWidth), stage.stageH)
+	--end
+end
+
+
+function drawLost()
+	love.audio.stop()
+	love.graphics.print( 'You lose', 50, 50)
+	love.graphics.print( 'You made ' .. game.score ..' points', 50, 80)
+	love.audio.play(sound.gameover)
 end
