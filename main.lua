@@ -23,14 +23,14 @@ function love.load()
 	stage.next.y = - stage.stageH
 
 	things = {}
-	things.attributes = {'collect1', 'collect2', 'collect3' 'evade', 'jump'}
+	things.attributes = {'collect1', 'collect2', 'collect3', 'evade', 'jump'}
 	things.img = {}
 	things.img.collect1 = love.graphics.newImage('assets/apple.png')
 	things.img.collect2 = love.graphics.newImage('assets/cheese.png')
 	things.img.collect3 = love.graphics.newImage('assets/fish.png')
 	things.img.evade = love.graphics.newImage('assets/bomb.png')
 	things.img.jump = love.graphics.newImage('assets/shit.png')
-	things.count = 5
+	things.count = 20
 	things.allthe = {}
 	things.height = 60
 
@@ -63,7 +63,7 @@ function love.load()
 	game.score = 0
 	game.speed = 6
 	game.time = 0
-	game.spawntime = 1.5
+	game.spawntime = 1
 
 	sound = {}
 	sound.collect = love.audio.newSource('sounds/collect.wav')
@@ -86,11 +86,19 @@ function love.update(dt)
 
 		timer = timer + dt
 		if timer >= game.spawntime then
+			print('done');
 			spawnThings()
 			timer = 0
 		end
-	end
 
+		if game.score > 30 then
+			game.speed = 7
+			game.spawntime = 0.5
+		end
+		if game.score > 50 then
+			game.speed = 8
+		end
+	end
 end
 
 function love.draw()
@@ -133,11 +141,21 @@ function foxCollide()
 
 				isColliding = collisionDetection(things.allthe[i].y, things.allthe[i].h)
 				if isColliding then
-					if things.allthe[i].attr == 'collect' then
+					if things.allthe[i].attr == 'collect1' then
 						game.score = game.score + 1
 						love.audio.play(sound.collect)
 						things.allthe[i].onstage = false
-					elseif things.allthe[i].attr ~= 'jump' and fox.state ~= 'jumping' then
+					elseif things.allthe[i].attr == 'collect2' then
+						game.score = game.score + 3
+						love.audio.play(sound.collect)
+						things.allthe[i].onstage = false
+					elseif things.allthe[i].attr == 'collect3' then
+						game.score = game.score + 5
+						love.audio.play(sound.collect)
+						things.allthe[i].onstage = false
+					elseif things.allthe[i].attr == 'jump' and fox.state == 'jumping' then
+						print('totally jumping')
+					else
 						love.audio.play(sound.dead)
 						things.allthe[i].onstage = false
 						currentState = 'lose'
@@ -223,6 +241,7 @@ function spawnThings()
 				things.allthe[i].attr = things.attributes[math.random(5)] -- 3 attributes
 				things.allthe[i].img = things.img[things.allthe[i].attr]
 				things.allthe[i].onstage = true
+				break
 			end
 		end
 	end
