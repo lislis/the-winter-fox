@@ -23,10 +23,11 @@ function love.load()
 	stage.next.y = - stage.stageH
 
 	things = {}
-	things.attributes = {'collect', 'evade', 'jump'}
-	things.sprite = love.graphics.newImage('assets/sprite.png')
+	things.attributes = {'collect1', 'collect2', 'collect3' 'evade', 'jump'}
 	things.img = {}
-	things.img.collect = love.graphics.newImage('assets/apple.png')
+	things.img.collect1 = love.graphics.newImage('assets/apple.png')
+	things.img.collect2 = love.graphics.newImage('assets/cheese.png')
+	things.img.collect3 = love.graphics.newImage('assets/fish.png')
 	things.img.evade = love.graphics.newImage('assets/bomb.png')
 	things.img.jump = love.graphics.newImage('assets/shit.png')
 	things.count = 5
@@ -37,7 +38,7 @@ function love.load()
 
 		things.allthe[i] = {}
 		things.allthe[i].lane = math.random(1, 4)
-		things.allthe[i].attr = things.attributes[math.random(1, 3)] -- only works because we have as many attributes as lanes
+		things.allthe[i].attr = things.attributes[math.random(5)] -- only works because we have as many attributes as lanes
 		things.allthe[i].w = 55 --magic
 		things.allthe[i].h = things.height
 		things.allthe[i].y = - things.height
@@ -216,10 +217,10 @@ function spawnThings()
 	for i = 1, things.count do
 
 		if things.allthe[i].onstage	== false then
-			if math.random(1, 10) > 5 then
+			if math.random(1, 10) > 2 then
 				things.allthe[i].y = - things.height
-				things.allthe[i].lane = math.random(stage.lanesCount)
-				things.allthe[i].attr = things.attributes[math.random(3)] -- 3 attributes
+				things.allthe[i].lane = math.random(4)
+				things.allthe[i].attr = things.attributes[math.random(5)] -- 3 attributes
 				things.allthe[i].img = things.img[things.allthe[i].attr]
 				things.allthe[i].onstage = true
 			end
