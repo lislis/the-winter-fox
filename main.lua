@@ -1,5 +1,5 @@
-
-states = {'intro', 'play', 'lose', 'win'}
+-- the winter fox
+-- BerlinMiniJam November 2014
 
 currentState = 'play'
 
@@ -86,7 +86,6 @@ function love.update(dt)
 
 		timer = timer + dt
 		if timer >= game.spawntime then
-			print('done');
 			spawnThings()
 			timer = 0
 		end
@@ -107,7 +106,7 @@ function love.draw()
 		drawBackground()
 		drawThings()
 		drawFox()
-		
+
 		love.graphics.rectangle('fill',  stage.stageW - 120, 20, 100, 35)
 		love.graphics.setColor(50, 50, 50)
 		love.graphics.print( 'Score: '.. game.score, stage.stageW - 100, 30)
@@ -290,7 +289,6 @@ function drawBackground()
 		--love.graphics.line(stage.lanesWidth + ((i * 1.3) * stage.lanesWidth),0, stage.lanesWidth + ((i * 1.3) * stage.lanesWidth), stage.stageH)
 	--end
 end
-
 
 function drawLost()
 	love.audio.stop()
